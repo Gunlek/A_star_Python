@@ -28,6 +28,8 @@ size = WIDTH, HEIGHT = 720, 720
 screen = pygame.display.set_mode(size)
 grid_surface = pygame.surface.Surface(size)
 
+display_info = True
+
 pygame.font.init()
 small_font_size = 15
 small_cell_font = pygame.font.SysFont('agencyfb', small_font_size)
@@ -105,15 +107,16 @@ def screen_update(evaluated_neighbours=[]):
     elif startup_step == 3:
         screen.blit(step_3_text, (0, 0))
 
-    if len(evaluated_neighbours) > 0:
-        for neighbours in evaluated_neighbours:
-            start_dist = small_cell_font.render(str(round(neighbours['start_dist'], 2)), True, text_color)
-            end_dist = small_cell_font.render(str(round(neighbours['end_dist'], 2)), True, text_color)
-            heuristic = small_cell_font.render(str(round(neighbours['heuristic'], 2)), True, text_color)
+    if display_info:
+        if len(evaluated_neighbours) > 0:
+            for neighbours in evaluated_neighbours:
+                start_dist = small_cell_font.render(str(round(neighbours['start_dist'], 2)), True, text_color)
+                end_dist = small_cell_font.render(str(round(neighbours['end_dist'], 2)), True, text_color)
+                heuristic = small_cell_font.render(str(round(neighbours['heuristic'], 2)), True, text_color)
 
-            screen.blit(start_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y))
-            screen.blit(end_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y + small_font_size))
-            screen.blit(heuristic, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y + small_font_size*2))
+                screen.blit(start_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y))
+                screen.blit(end_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y + small_font_size))
+                screen.blit(heuristic, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y + small_font_size*2))
 
     pygame.display.flip()
 
