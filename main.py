@@ -6,13 +6,14 @@
 import pygame
 import sys
 from cell import Cell
+from datetime import datetime
 
 pygame.init()
 
 # Colors definitions
 bg_color = (41, 128, 185)
 grid_color = (236, 240, 241)
-state_0_color = bg_color
+state_0_color = bg_color 
 state_1_color = (192, 57, 43)   # Neighbours
 state_2_color = (39, 174, 96)   # Path
 state_3_color = (22, 160, 133)  # Start point
@@ -85,7 +86,7 @@ def draw_states(surface, grid, width, height):
 def screen_update():
     screen.fill(bg_color)
     draw_states(screen, grid, WIDTH, HEIGHT)
-    screen.blit(grid_surface, (0, 0))
+    # screen.blit(grid_surface, (0, 0))
 
     if startup_step == 0:
         screen.blit(step_0_text, (0, 0))
@@ -97,9 +98,12 @@ def screen_update():
     elif startup_step == 3:
         screen.blit(step_3_text, (0, 0))
 
+    pygame.display.flip()
+
 while 1:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit()
+        if event.type == pygame.QUIT:
+            sys.exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 if startup_step >= 1:
@@ -118,5 +122,4 @@ while 1:
                 grid[mouse_cell_x][mouse_cell_y].setState(5)
 
     screen_update()
-
     pygame.display.flip()
