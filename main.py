@@ -20,6 +20,7 @@ state_3_color = (22, 160, 133)  # Start point
 state_4_color = (142, 68, 173)  # Target point
 state_5_color = (44, 62, 80)    # Wall
 state_6_color = (129, 236, 236) # Highlighted cells
+state_7_color = (255, 234, 167) # Elected path
 text_color = (243, 156, 18)
 
 size = WIDTH, HEIGHT = 720, 720
@@ -86,6 +87,8 @@ def draw_states(surface, grid, width, height):
                 pygame.draw.rect(surface, state_5_color, pygame.Rect(cell.getX() * cell_size_x, cell.getY() * cell_size_y, cell_size_x, cell_size_y))
             if cell.getState() == 6:
                 pygame.draw.rect(surface, state_6_color, pygame.Rect(cell.getX() * cell_size_x, cell.getY() * cell_size_y, cell_size_x, cell_size_y))
+            if cell.getState() == 7:
+                pygame.draw.rect(surface, state_7_color, pygame.Rect(cell.getX() * cell_size_x, cell.getY() * cell_size_y, cell_size_x, cell_size_y))
 
 # Handle screen update and refresh on each rendering cycle
 def screen_update(evaluated_neighbours=[]):
@@ -104,9 +107,9 @@ def screen_update(evaluated_neighbours=[]):
 
     if len(evaluated_neighbours) > 0:
         for neighbours in evaluated_neighbours:
-            start_dist = small_cell_font.render(str(neighbours['start_dist']), True, text_color)
-            end_dist = small_cell_font.render(str(neighbours['end_dist']), True, text_color)
-            heuristic = small_cell_font.render(str(neighbours['heuristic']), True, text_color)
+            start_dist = small_cell_font.render(str(round(neighbours['start_dist'], 2)), True, text_color)
+            end_dist = small_cell_font.render(str(round(neighbours['end_dist'], 2)), True, text_color)
+            heuristic = small_cell_font.render(str(round(neighbours['heuristic'], 2)), True, text_color)
 
             screen.blit(start_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y))
             screen.blit(end_dist, (neighbours['cell'].getX() * cell_size_x, neighbours['cell'].getY() * cell_size_y + small_font_size))
@@ -125,7 +128,7 @@ def get_neighbours(cell, grid):
             if x >= 0 and x < len(grid):
                 if y >= 0 and y < len(grid[x]):
                     if not (x == cell_x and y == cell_y):
-                        if grid[x][y].getState() != 5:
+                        if grid[x][y].getState() != 5 and grid[x][y].getState() != 7 and grid[x][y].getState() != 3:
                             neighbours.append(grid[x][y])
     
     for cell in neighbours:
@@ -133,8 +136,8 @@ def get_neighbours(cell, grid):
     return neighbours
 
 def evaluate_heuristic(cell, target_cell, departure_cell):
-    distance_at_startpoint = round(math.sqrt((cell.getX() - departure_cell.getX())**2 + (cell.getY() - departure_cell.getY())**2), 2)
-    distance_at_endpoint = round(math.sqrt((cell.getX() - target_cell.getX())**2 + (cell.getY() - target_cell.getY())**2), 2)
+    distance_at_startpoint = math.sqrt((cell.getX() - departure_cell.getX())**2 + (cell.getY() - departure_cell.getY())**2)
+    distance_at_endpoint = math.sqrt((cell.getX() - target_cell.getX())**2 + (cell.getY() - target_cell.getY())**2)
 
     heuristic = distance_at_startpoint + distance_at_endpoint
 
@@ -143,6 +146,9 @@ def evaluate_heuristic(cell, target_cell, departure_cell):
 current_cell = grid[0][0]
 target_cell = grid[0][0]
 departure_cell = grid[0][0]
+
+last_refresh_step = 0
+evaluated_neighbours = []
 
 while 1:
     screen.fill(bg_color)
@@ -170,18 +176,22 @@ while 1:
             elif startup_step == 2:
                 grid[mouse_cell_x][mouse_cell_y].setState(5)
         
-    evaluated_neighbours = []
-    if startup_step >= 4:
-        # The game is running, let's run the algorithm
-        neighbours = get_neighbours(current_cell, grid)
-        for cell in neighbours:
-            data = {}
-            start_dist, end_dist, heuristic = evaluate_heuristic(cell, target_cell, departure_cell)
-            data['cell'] = cell
-            data['start_dist'] = start_dist
-            data['end_dist'] = end_dist
-            data['heuristic'] = heuristic
-            evaluated_neighbours.append(data)
-
+    if startup_step >= 4 and startup_step > last_refresh_step:
+        if current_cell != target_cell:
+            evaluated_neighbours = []
+            last_refresh_step = startup_step
+            # The game is running, let's run the algorithm
+            neighbours = get_neighbours(current_cell, grid)
+            for cell in neighbours:
+                data = {}
+                start_dist, end_dist, heuristic = evaluate_heuristic(cell, target_cell, departure_cell)
+                data['cell'] = cell
+                data['start_dist'] = start_dist
+                data['end_dist'] = end_dist
+                data['heuristic'] = heuristic
+                evaluated_neighbours.append(data)
+            sorted_neighbours = sorted(evaluated_neighbours, key=lambda x : x['heuristic'])
+            sorted_neighbours[0]['cell'].setState(7)
+            current_cell = sorted_neighbours[0]['cell']
 
     screen_update(evaluated_neighbours)
